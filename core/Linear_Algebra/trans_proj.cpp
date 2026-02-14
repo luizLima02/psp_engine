@@ -28,7 +28,23 @@ void rotateXYZ(float angle, float x, float y, float z){
 // ======================
 
 void init_perspective_2D(float left, float right, float top, float down, float near, float far){
-    //sceGumPerspective(45.0f, 16.0f/9.0f, 0.5f, 1000.0f);
+    sceGumMatrixMode(GU_PROJECTION);
+    sceGumLoadIdentity();
+    sceGumOrtho(left, right, top, down, near, far);
+
+    sceGumMatrixMode(GU_VIEW);
+    sceGumLoadIdentity();
+
+    sceGumMatrixMode(GU_MODEL);
+    sceGumLoadIdentity();
+}
+
+void init_perspective_2D_Especial(float fovy, float aspect, float near, float far){
+    float top = -near* tanf(fovy / 2.0f);
+    float down = -top;
+    float right = -top * aspect;
+    float left = -right;
+
     sceGumMatrixMode(GU_PROJECTION);
     sceGumLoadIdentity();
     sceGumOrtho(left, right, top, down, near, far);

@@ -231,13 +231,11 @@ void draw_square(int xc, int yc, int w, int h, unsigned int cor);
 
 /*
 *Renderiza um Quadrado 2D em 3D na tela
-@param xc: x center
-@param yc: y center
 @param w: escala em x
 @param h: escala em y
 @param cor: cor do quadrado
 */
-void draw_square2D(float w, float h, unsigned int cor);
+void draw_square2D(float w, float h, unsigned int cor, int type = GU_TRANSFORM_3D);
 
 /*
 *Desenha um ponto 3D no mundo

@@ -578,17 +578,18 @@ void draw_square(int xc, int yc, int w, int h, unsigned int cor){
    
     sceGuColor(cor);
     sceGuDisable(GU_TEXTURE_2D);
-    sceGuDrawArray(GU_SPRITES, GU_COLOR_8888 | GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, ve);
+    sceGuDrawArray(GU_SPRITES, GU_COLOR_8888 | GU_TEXTURE_32BITF | 
+                   GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, ve);
 }
 
 
 /*
-*Renderiza um Quadrado 2D em 3D na tela
+*Renderiza um Quadrado2D em 3D na tela
 @param w: escala em x
 @param h: escala em y
 @param cor: cor do quadrado
 */
-void draw_square2D(float w, float h, unsigned int cor){
+void draw_square2D(float w, float h, unsigned int cor, int type){
     static Vertex vertice[4];
     //centrado em 0
     vertice[0] = {0, 0, cor, -1.0f - (w/2.0f), -1.0f - (h/2.0f), 1.0f}; // 0
@@ -605,8 +606,8 @@ void draw_square2D(float w, float h, unsigned int cor){
     sceGuDisable(GU_TEXTURE_2D);
     //draw_mesh(&m, 0, GU_TRANSFORM_3D);
     sceGumDrawArray(GU_TRIANGLES, 
-                   GU_INDEX_16BIT | GU_COLOR_8888 | 
-                   GU_TEXTURE_32BITF | GU_VERTEX_32BITF | 
+                   GU_INDEX_16BIT | GU_TEXTURE_32BITF | 
+                   GU_COLOR_8888 | GU_VERTEX_32BITF | 
                    GU_TRANSFORM_3D, 
                    6, indices, vertice);
 }

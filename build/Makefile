@@ -3,6 +3,7 @@ OBJS = ../main.o \
 	   ../core/core.o \
 	   ../core/Linear_Algebra/trans_proj.o \
 	   ../render/renderer.o \
+	   ../render/Camera/camera.o
 #	   ../render/renderer3D.o \
 #	   ../render/Anim/animation.o \
 #	   ../render/Anim/animation3D.o \

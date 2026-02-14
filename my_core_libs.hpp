@@ -17,6 +17,7 @@
 #include "core/Linear_Algebra/trans_proj.hpp"
 //Render
 #include "render/renderer.hpp"
+#include "render/Camera/camera.hpp"
 //#include "render/renderer3D.hpp"
 //#include "render/Anim/animation.hpp"
 //#include "render/Anim/animation3D.hpp"
