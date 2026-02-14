@@ -1,7 +1,8 @@
 TARGET = main
 OBJS = ../main.o \
 	   ../core/core.o \
-#	   ../render/renderer.o \
+	   ../core/Linear_Algebra/trans_proj.o \
+	   ../render/renderer.o \
 #	   ../render/renderer3D.o \
 #	   ../render/Anim/animation.o \
 #	   ../render/Anim/animation3D.o \
@@ -22,7 +23,7 @@ LDFLAGS =
 LIBS= -lpspgum -lpspgu -lpspge -lpspdisplay -lpspdebug -lpspctrl -lpsputility
 
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = MoonScrap
+PSP_EBOOT_TITLE = Title
 PSP_EBOOT_ICON = "../resources/ICON0.png"
 PSP_EBOOT_PIC1 = "../resources/PIC1.png"
 
