@@ -13,6 +13,10 @@ CameraData Create_camera(vec3 pos, vec3 up, vec3 front){
     };
 }
 
+/*void ChangeCamPos(CameraData data, vec3 pos){
+    data.Position = pos;
+}*/
+
 RotateData Create_rotate(float yaw, float pitch, float zoom){
     return RotateData{
         .yaw = yaw,
@@ -42,10 +46,10 @@ CameraData ProcessGamePad(CameraData data, Camera_Movement direction, float delt
     vec3 Fro = data.Front;
     vec3 Upp = data.Up;
     if(direction == FORWARD){
-        Pos = AddScaledVector3(Pos, Fro, velocity);
+        AddScaledVector3(Pos, Fro, velocity);
     }
     if(direction == BACKWARD){
-        Pos = AddScaledVector3(Pos, Fro, -1.0f*velocity);
+        AddScaledVector3(Pos, Fro, -1.0f*velocity);
     }
     //Esquerda ou Direita, calcule vetor Right
     if(direction == LEFT || direction == RIGHT){
@@ -53,17 +57,17 @@ CameraData ProcessGamePad(CameraData data, Camera_Movement direction, float delt
         gumCrossProduct(&right, &Fro, &data.WorldUp);
         gumNormalize(&right);
         if(direction == LEFT){
-            Pos = AddScaledVector3(Pos, right, -1.0f*velocity);
+            AddScaledVector3(Pos, right, -1.0f*velocity);
         }
         if(direction == RIGHT){
-            Pos = AddScaledVector3(Pos, right, velocity);
+            AddScaledVector3(Pos, right, velocity);
         }
     }
     if(direction == UP){
-        Pos = AddScaledVector3(Pos, Upp, velocity);
+        AddScaledVector3(Pos, Upp, velocity);
     }
     if(direction == DOWN){
-        Pos = AddScaledVector3(Pos, Upp, -1.0f*velocity);
+        AddScaledVector3(Pos, Upp, -1.0f*velocity);
     }
     
     return CameraData{

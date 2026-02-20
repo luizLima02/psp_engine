@@ -136,6 +136,8 @@ void destroy_vertex(Vertex* vert);
 
 void destroy_texture(Texture* tex);
 
+void destroy_subtexture(sub_texture* tex);
+
 //*****************************
 //      Destrutor de MESH     *
 //*****************************
@@ -235,7 +237,7 @@ void draw_square(int xc, int yc, int w, int h, unsigned int cor);
 @param h: escala em y
 @param cor: cor do quadrado
 */
-void draw_square2D(float w, float h, unsigned int cor, int type = GU_TRANSFORM_3D);
+void draw_square2D(unsigned int cor, float w = 0, float h = 0, int type = GU_TRANSFORM_3D);
 
 /*
 *Desenha um ponto 3D no mundo

@@ -300,6 +300,10 @@ void destroy_texture(Texture* tex){
     free(tex);
 }
 
+void destroy_subtexture(sub_texture* tex){
+    free(tex);
+}
+
 //*****************************
 //      Destrutor de MESH     *
 //*****************************
@@ -444,6 +448,7 @@ void draw_mesh(Mesh* mesh, int offset, unsigned int MODE){
 @params TFX_MODE = modo de mistura da placa
 */
 void draw_texture(Texture * texture, float x, float y, float w, float h, int TFX_MODE, int swizzle) {
+    sceGuEnable(GU_TEXTURE_2D);
     static Vertex vertices[2];
 
     vertices[0].u = 0;
@@ -474,8 +479,6 @@ void draw_texture(Texture * texture, float x, float y, float w, float h, int TFX
     sceGuTexImage(0, texture->width, texture->height, texture->width, texture->data);
 
     //bind_texture(texture, TFX_MODE, swizzle);
-
-    sceGuEnable(GU_TEXTURE_2D); 
     sceGuDrawArray(GU_SPRITES, GU_COLOR_8888 | GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, vertices);
     sceGuDisable(GU_TEXTURE_2D);
 }
@@ -485,6 +488,7 @@ void draw_texture(Texture * texture, float x, float y, float w, float h, int TFX
 @params TFX_MODE = modo de mistura da placa
 */
 void draw_texture(sub_texture* texture, float x, float y, float w, float h, int TFX_MODE) {
+    sceGuEnable(GU_TEXTURE_2D);
     static Vertex v[2];
 
     v[0].u = texture->x;
@@ -514,6 +518,7 @@ void draw_texture(sub_texture* texture, float x, float y, float w, float h, int 
 @param h: escala em y
 */
 void draw_sprite(Texture* tex, float w, float h){
+    sceGuEnable(GU_TEXTURE_2D);
     static Vertex vertice[4];
     vertice[0] = {0, 0, 0xffffffff, -1.0f - (w/2.0f),-1.0f - (h/2.0f), 1.0f}; // 0
     vertice[1] = {0, 1, 0xffffffff, -1.0f - (w/2.0f), 1.0f + (h/2.0f), 1.0f}; // 1
@@ -521,12 +526,13 @@ void draw_sprite(Texture* tex, float w, float h){
     vertice[3] = {1, 0, 0xffffffff, 1.0f + (w/2.0f),-1.0f - (h/2.0f), 1.0f}; // 3
 
     static u16 indices[6]{
-        0, 1, 2, 0, 2, 3
+        0, 3, 2, 0, 2, 1
     };
 
     Mesh m = {.vertices = vertice, .indices = indices, .qnt_indices = 6};
     bind_texture(tex);
     draw_mesh(&m, 0, GU_TRANSFORM_3D);
+    sceGuDisable(GU_TEXTURE_2D);
 }
 
 /*
@@ -536,6 +542,7 @@ void draw_sprite(Texture* tex, float w, float h){
 @param h: escala em y
 */
 void draw_sprite(sub_texture* tex, float w, float h){
+    sceGuEnable(GU_TEXTURE_2D);
     static Vertex vertice[4];
     //centrado em 0
     vertice[0] = {0, 0, 0xffffffff, -1.0f - (w/2.0f), -1.0f - (h/2.0f), 1.0f}; // 0
@@ -549,6 +556,7 @@ void draw_sprite(sub_texture* tex, float w, float h){
     Mesh m = {.vertices = vertice, .indices = indices, .qnt_indices = 6};
     bind_sub_texture(tex, &m);
     draw_mesh(&m, 0, GU_TRANSFORM_3D);
+    sceGuDisable(GU_TEXTURE_2D);
 }
 
 /*
@@ -560,6 +568,7 @@ void draw_sprite(sub_texture* tex, float w, float h){
 @param cor: cor do quadrado
 */
 void draw_square(int xc, int yc, int w, int h, unsigned int cor){
+    sceGuDisable(GU_TEXTURE_2D);
     static Vertex ve[2];
 
     ve[0].u = 0;
@@ -577,9 +586,9 @@ void draw_square(int xc, int yc, int w, int h, unsigned int cor){
     ve[1].z = 0.0f;
    
     sceGuColor(cor);
-    sceGuDisable(GU_TEXTURE_2D);
     sceGuDrawArray(GU_SPRITES, GU_COLOR_8888 | GU_TEXTURE_32BITF | 
                    GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, ve);
+    sceGuEnable(GU_TEXTURE_2D);
 }
 
 
@@ -589,7 +598,7 @@ void draw_square(int xc, int yc, int w, int h, unsigned int cor){
 @param h: escala em y
 @param cor: cor do quadrado
 */
-void draw_square2D(float w, float h, unsigned int cor, int type){
+void draw_square2D(unsigned int cor, float w, float h, int type){
     static Vertex vertice[4];
     //centrado em 0
     vertice[0] = {0, 0, cor, -1.0f - (w/2.0f), -1.0f - (h/2.0f), 1.0f}; // 0
@@ -610,6 +619,7 @@ void draw_square2D(float w, float h, unsigned int cor, int type){
                    GU_COLOR_8888 | GU_VERTEX_32BITF | 
                    GU_TRANSFORM_3D, 
                    6, indices, vertice);
+    sceGuEnable(GU_TEXTURE_2D);
 }
 
 /*
@@ -630,6 +640,7 @@ void draw_point(unsigned int cor){
                     1,
                     NULL, // Sem buffer de índices
                     vertice);
+    sceGuEnable(GU_TEXTURE_2D);
 }
 
 /*
@@ -658,6 +669,7 @@ void draw_line3D(vec3 pi, vec3 pf, unsigned int cor){
                     GU_COLOR_8888 | GU_TEXTURE_32BITF | 
                     GU_VERTEX_32BITF | GU_TRANSFORM_3D, 
                     2, 0, ve);
+    sceGuEnable(GU_TEXTURE_2D);
 }
 
 /*
@@ -707,4 +719,5 @@ void draw_Circle3D(float radius, unsigned int color){
                     total_vertices,
                     NULL, // Sem buffer de índices
                     vertices);
+    sceGuEnable(GU_TEXTURE_2D);
 }

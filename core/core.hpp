@@ -32,7 +32,9 @@
 #define SPRITE_WU_SIZE 32.0f
 
 //============================================================
+//
 //                          AUX
+//
 //============================================================
 
 int size_of_string(const char* s);
@@ -47,12 +49,26 @@ int size_of_string(const char* s);
  */
 const char* concatString(const char* s1, const char* s2);
 
-int maxi(int a, int b);
+static inline int maxi(int a, int b){
+    if(a > b){return a;}
+    else{return b;}
+}
 
-int mini(int a, int b);
+static inline int mini(int a, int b){
+    if(a < b){return a;}
+    else{return b;}
+}
+
+static inline float clampF(float value, float min, float max){
+    if(value < min){return min;}
+    if(value > max){return max;}
+    return value;
+}
 
 //============================================================
+//
 //                   PSP CALLBACKS
+//
 //============================================================
 
 int exit_callback(int arg1, int arg2, void *common);
@@ -70,19 +86,25 @@ int setup_callbacks(void);
 /*
 * coloca o valor passado no axis de [-1 a 1]
 */
-float normaliza_axis(unsigned char ax);
+static inline float normaliza_axis(unsigned char ax){
+    int axis = ax;
+    float valor = ((float)axis - 128.0f)/128.0f;
+    return valor;
+}
 
 //===============
 //   delta time
 //===============
 
 extern float delta_time;
-extern u64 last_time;
+extern SceInt64 last_time;
 
 void calc_delta();
 
 //============================================================
+//
 //                   VETORES - MATRIZES
+//
 //============================================================
 
 #define vec4 ScePspFVector4
@@ -97,79 +119,121 @@ void calc_delta();
 //-------------------------
 //   construtores vetores
 //-------------------------
-
+/**
+ * @brief Create a vec2
+ */
 vec2 Vec2(float x = 0, float y = 0);
-
+/**
+ * @brief Create a vec3
+ */
 vec3 Vec3(float x = 0, float y = 0, float z = 0);
+/**
+ * Discarts the w position and return the vec3
+ */
+vec3 Vec3(vec4 v);
 
+/**
+ * @brief Create a vec4
+ */
 vec4 Vec4(float x = 0, float y = 0, float z = 0, float w = 0);
+/**
+ * Add a w position and return the vec4
+ */
+vec4 Vec4(vec3 v, float w = 0 );
+//=============================================================
+//
+//                    funçoes basicas
+//
+//=============================================================
 
-//-------------------------
-//      funçoes basicas
-//-------------------------
-
-// Adição
+//--------------------------------------
+//                Adição
+//--------------------------------------
 //vec2
-vec2 operator+(const vec2& u, const vec2& v);
+static inline void operator+=(vec2& u, const vec2& v){
+    u.x += v.x; 
+    u.y += v.y;
+}
 //vec3
-vec3 operator+(const vec3& u, const vec3& v);
+static inline void operator+=(vec3& u, const vec3& v){
+    u.x += v.x; 
+    u.y += v.y; 
+    u.z += v.z;
+}
 //vec4
-vec4 operator+(const vec4& u, const vec4& v);
+static inline void operator+=(vec4& u, const vec4& v){
+    u.x += v.x; 
+    u.y += v.y; 
+    u.z += v.z;
+    u.w += v.w;
+}
 
-//Subtração
+//--------------------------------------
+//              Subtração
+//--------------------------------------
 //vec2
-vec2 operator-(const vec2& u, const vec2& v);
+static inline void operator-=(vec2& u, const vec2& v){
+    u.x -= v.x; 
+    u.y -= v.y; 
+}
 //vec3
-vec3 operator-(const vec3& u, const vec3& v);
+static inline void operator-=(vec3& u, const vec3& v){
+    u.x -= v.x; 
+    u.y -= v.y; 
+    u.z -= v.z;
+}
 //vec4
-vec4 operator-(const vec4& u, const vec4& v);
+static inline void operator-=(vec4& u, const vec4& v){
+    u.x -= v.x; 
+    u.y -= v.y; 
+    u.z -= v.z;
+    u.w -= v.w;
+}
 
-// Produto
+//--------------------------------------
+//              Produto
+//--------------------------------------
 //vec2
-vec2 operator*(const float &s, const vec2& u);
-vec2 operator*(const vec2& u, const float &s);
+static inline void operator*=(vec2& u, const float &s){
+    u.x *= s; 
+    u.y *= s; 
+}
 //vec3
-vec3 operator*(const float &s, const vec3& u);
-vec3 operator*(const vec3& u, const float &s);
+static inline void operator*=(vec3& u, const float &s){
+    u.x *= s; 
+    u.y *= s; 
+    u.z *= s;
+}
 //vec4
-vec4 operator*(const float &s, const vec4& u);
-vec4 operator*(const vec4& u, const float &s);
+static inline void operator*=(vec4& u, const float &s){ 
+    u.x *= s; 
+    u.y *= s; 
+    u.z *= s;
+    u.w *= s;
+}
 
-// Division
+//--------------------------------------
+//              Division
+//--------------------------------------
 //vec2
-vec2 operator/(const float &s, const vec2& u);
-vec2 operator/(const vec2& u, const float &s);
+static inline void operator/=(vec2& u, const float &s){
+    u.x /= s; 
+    u.y /= s; 
+}
 //vec3
-vec3 operator/(const float &s, const vec3& u);
-vec3 operator/(const vec3& u, const float &s);
+static inline void operator/=(vec3& u, const float &s){
+    u.x /= s; 
+    u.y /= s; 
+    u.z /= s;
+}
 //vec4
-vec4 operator/(const float &s, const vec4& u);
-vec4 operator/(const vec4& u, const float &s);
+static inline void operator/=(vec4& u, const float &s){ 
+    u.x /= s; 
+    u.y /= s; 
+    u.z /= s;
+    u.w /= s;
+}
 
-/*
-* Pega o Modulo do vetor
-@param v:(vec2) B :vetor para pegar o modulo
-@param u:(vec2) A :vetor para pegar o modulo
-*
-* Retorna sqrt((A - B)^2)
-*/
-float Modulo(vec2 v, vec2 u = Vec2());
-/*
-* Pega o Modulo do vetor
-@param v:(vec3) B :vetor para pegar o modulo
-@param u:(vec3) A :vetor para pegar o modulo
-*
-* Retorna sqrt((A - B)^2)
-*/
-float Modulo(vec3 v, vec3 u= Vec3());
-/*
-* Pega o Modulo do vetor
-@param v:(vec4) B :vetor para pegar o modulo
-@param u:(vec4) A :vetor para pegar o modulo
-*
-* Retorna sqrt((A - B)^2)
-*/
-float Modulo(vec4 v, vec4 u = Vec4());
 
 /*
 * Retorna o Cross Product dos vetores Passados
@@ -182,17 +246,85 @@ vec3 Cross(vec3 u, vec3 t);
 float DOT(vec3 t, vec3 outro);
 
 /*
+* Retorna o produto escalar dos vetores Passados
+*/
+float DOT(vec2 t, vec2 outro);
+
+//--------------------------
+//          Invert
+//--------------------------
+/**
+ * Inverts the vector
+ */
+vec2 Invert(vec2 data);
+/**
+ * Inverts the vector
+ */
+vec3 Invert(vec3 data);
+/**
+ * Inverts the vector
+ */
+vec4 Invert(vec4 data);
+
+//--------------------------------
+//             Norma
+//--------------------------------
+
+/**
+* Get the norm of the vector
+* @param v:(vec2) B :vetor para pegar o modulo
+* @param u:(vec2) A :vetor para pegar o modulo
+*
+* Retorn sqrt((A - B)^2)
+*/
+float Norm(vec2 v, vec2 u = Vec2());
+
+/**
+* Get the norm of the vector
+* @param v:(vec3) B :vetor para pegar o modulo
+* @param u:(vec3) A :vetor para pegar o modulo
+*
+* Retorna sqrt((A - B)^2)
+*/
+float Norm(vec3 v, vec3 u= Vec3());
+/**
+* Get the norm of the vector
+* @param v:(vec4) B :vetor para pegar o modulo
+* @param u:(vec4) A :vetor para pegar o modulo
+*
+* Retorna sqrt((A - B)^2)
+*/
+float Norm(vec4 v, vec4 u = Vec4());
+
+/**
 * Normaliza o vetor passado
 */
-vec3 Normalizar(vec3 t);
+vec3 Normalize(vec3 t);
+
+
+//--------------------------------------
+//      Especial Functions
+//--------------------------------------
 
 //Adiciona o escalar*vetor ao vetor data
 
-vec2 AddScaledVector2(vec2 data, vec2 vec, float scalar);
+static inline void AddScaledVector2(vec2& out, vec2 vec, float scalar){
+    out.x += vec.x * scalar;
+    out.y += vec.y * scalar;
+}
 
-vec3 AddScaledVector3(vec3 data, vec3 vec, float scalar);
+static inline void AddScaledVector3(vec3& out, vec3 vec, float scalar){
+    out.x += vec.x * scalar;
+    out.y += vec.y * scalar;
+    out.z += vec.z * scalar;
+}
 
-vec4 AddScaledVector4(vec4 data, vec4 vec, float scalar);
+static inline void AddScaledVector4(vec4& out, vec4 vec, float scalar){
+    out.x += vec.x * scalar;
+    out.y += vec.y * scalar;
+    out.z += vec.z * scalar;
+    out.w += vec.w * scalar;
+}
 
 //-------------------------
 //   construtores matriz
@@ -213,7 +345,7 @@ mat4 Mat4(vec4 cx, vec4 cy, vec4 cz, vec4 cw);
 
 Quat Quaternion(vec4 v);
 
-float Radians(float v);
+static inline float Radians(float v){ return v * (M_PI / 180.0f); }
 
 Quat Quat_from_axis_angle(ScePspFVector3 axis, float angle_rad);
 

@@ -21,13 +21,10 @@
 //#include "render/renderer3D.hpp"
 //#include "render/Anim/animation.hpp"
 //#include "render/Anim/animation3D.hpp"
-//#include "render/UI/font.hpp"
+#include "render/UI/font.hpp"
 //#include "render/PrimitivasCG/primitivas.hpp"
-//Transformações
-//#include "transfProj/transproj.hpp"
-//#include "transfProj/camera.hpp"
-//Fisica
-//#include "fisica/fisica.hpp"
+//Physics
+#include "physics/physics.hpp"
 
 #endif
         

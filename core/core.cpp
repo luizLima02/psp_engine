@@ -47,19 +47,11 @@ const char* concatString(const char* s1, const char* s2) {
     return resultado;
 }
 
-int maxi(int a, int b){
-    if(a > b){return a;}
-    else{return b;}
-}
-
-int mini(int a, int b){
-    if(a < b){return a;}
-    else{return b;}
-}
 
 //============================================================
 //                   PSP CALLBACKS
 //============================================================
+
 
 int exit_callback(int arg1, int arg2, void *common) {
     sceKernelExitGame();
@@ -80,22 +72,13 @@ int setup_callbacks(void) {
     return thid;
 }
 
-/*
-* coloca o valor passado no axis de [-1 a 1]
-*/
-float normaliza_axis(unsigned char ax){
-    int axis = ax;
-    float valor = ((float)axis - 128.0f)/128.0f;
-    return valor;
-}
-
 //delta time
 float delta_time = 0.0f;
-u64 last_time = 0;
+SceInt64 last_time = 0;
 
 void calc_delta(){
     // --- Cálculo do Delta Time (como mostrado acima) ---
-    u64 current_time = sceKernelGetSystemTimeWide();
+    SceInt64 current_time = sceKernelGetSystemTimeWide();
     if (last_time != 0) {
         delta_time = (float)(current_time - last_time) / 1000000.0f;
     }
@@ -112,150 +95,90 @@ void calc_delta(){
 //-------------------------
 
 vec2 Vec2(float x, float y){
-    vec2 res = {.x = x, .y = y};
-    return res;
+    return vec2{.x = x, .y = y};
 }
 
 vec3 Vec3(float x , float y , float z ){
-    vec3 res = {.x = x, .y = y, .z = z};
-    return res;
+   return vec3{.x = x, .y = y, .z = z};
+}
+
+vec3 Vec3(vec4 v){
+    return vec3{.x = v.x, .y = v.y, .z = v.z};
 }
 
 vec4 Vec4(float x , float y , float z , float w ){
-    vec4 res = {.x = x, .y = y, .z = z, .w = w};
-    return res;
+    return vec4{.x = x, .y = y, .z = z, .w = w};
 }
 
-//-------------------------
-//   Overload operators
-//-------------------------
-// plus
-//vec2
-vec2 operator+(const vec2& u, const vec2& v){
-    return Vec2(u.x + v.x, u.y + v.y);
-}
-//vec3
-vec3 operator+(const vec3& u, const vec3& v){
-    return Vec3(u.x + v.x, u.y + v.y, u.z + v.z);
-}
-//vec4
-vec4 operator+(const vec4& u, const vec4& v){
-    return Vec4(u.x + v.x, u.y + v.y, u.z + v.z, v.z * u.z);
+vec4 Vec4(vec3 v, float w ){
+    return vec4{.x = v.x, .y = v.y, .z = v.z, .w = w};
 }
 
-// sub
-//vec2
-vec2 operator-(const vec2& u, const vec2& v){
-    return Vec2(u.x - v.x, u.y - v.y);
-}
-//vec3
-vec3 operator-(const vec3& u, const vec3& v){
-    return Vec3(u.x - v.x, u.y - v.y, u.z - v.z);
-}
-//vec4
-vec4 operator-(const vec4& u, const vec4& v){
-    return Vec4(u.x - v.x, u.y - v.y, u.z - v.z, v.z * u.z);
-}
-
-// mult
-//vec2
-vec2 operator*(const float &s, const vec2& u){
-    return Vec2(u.x*s, u.y*s); 
-}
-vec2 operator*(const vec2& u, const float &s){return (s*u);}
-
-//vec3
-vec3 operator*(const float &s, const vec3& u){
-    return Vec3(u.x*s, u.y*s, u.z*s); 
-}
-vec3 operator*(const vec3& u, const float &s){return (s*u);}
-
-//vec4
-vec4 operator*(const float &s, const vec4& u){
-    return Vec4(u.x*s, u.y*s, u.z*s, u.w); 
-}
-vec4 operator*(const vec4& u, const float &s){ return(s*u);}
-
-//Div
-//vec2
-vec2 operator/(const float &s, const vec2& u){
-    if(s != 0){return u;}
-    return Vec2(u.x/s, u.y/s); 
-}
-vec2 operator/(const vec2& u, const float &s){return (s/u);}
-
-//vec3
-vec3 operator/(const float &s, const vec3& u){
-    if(s != 0){return u;}
-    return Vec3(u.x/s, u.y/s, u.z/s); 
-}
-vec3 operator/(const vec3& u, const float &s){return (s/u);}
-
-//vec4
-vec4 operator/(const float &s, const vec4& u){
-    if(s != 0){return u;}
-    return Vec4(u.x/s, u.y/s, u.z/s, u.w); 
-}
-vec4 operator/(const vec4& u, const float &s){ return(s/u);}
 
 //-------------------------
 //      funçoes basicas
 //-------------------------
 
-float Modulo(vec2 v, vec2 u){
+/**
+ * Returns a Inverts the vector
+ */
+vec2 Invert(vec2 data){
+    return vec2{-data.x, -data.y};
+}
+/**
+ * Returns a Inverts the vector
+ */
+vec3 Invert(vec3 data){
+    return vec3{-data.x, -data.y, -data.z};
+}
+/**
+ * Returns a Inverts the vector
+ */
+vec4 Invert(vec4 data){
+    return vec4{-data.x, -data.y, -data.z, -data.w};
+}
+
+//================================
+//             Norm
+//================================
+
+float Norm(vec2 v, vec2 u){
     return sqrtf(powf((u.x - v.x), 2)+powf((u.y - v.y), 2));
 }
 
-float Modulo(vec3 v, vec3 u){
+float Norm(vec3 v, vec3 u){
     return sqrtf(powf((u.x - v.x), 2)+powf((u.y - v.y), 2)+powf((u.z - v.z), 2));
 }
 
-float Modulo(vec4 v, vec4 u){
+float Norm(vec4 v, vec4 u){
     return sqrtf(powf((u.x - v.x), 2)+powf((u.y - v.y), 2)+powf((u.z - v.z), 2));
 }
 
+vec3 Normalize(vec3 t){
+    vec3 n = vec3{t.x, t.y, t.z};
+    gumNormalize(&n);
+    return n;
+}
+
+//=============================
+//    Especial Functions
+//=============================
+
+//Cross product
 vec3 Cross(vec3 u, vec3 t){
     vec3 res;
     gumCrossProduct(&res, &u, &t);
     return res;
 }
 
+//Dot product
+float DOT(vec2 t, vec2 outro){
+    return (t.x * outro.x) + (t.y * outro.y);
+}
+
+//Dot product
 float DOT(vec3 t, vec3 outro){
     return gumDotProduct(&t, &outro);
-}
-
-vec3 Normalizar(vec3 t){
-    vec3 n = Vec3(t.x, t.y, t.z);
-    gumNormalize(&n);
-    return n;
-}
-
-//Adiciona o escalar*vetor ao vetor data
-
-vec2 AddScaledVector2(vec2 data, vec2 vec, float scalar){
-    return data + (scalar*vec);
-    /*return vec2{
-        .x = data.x + (vec.x * scalar),
-        .y = data.y + (vec.y * scalar)
-    };*/
-}
-
-vec3 AddScaledVector3(vec3 data, vec3 vec, float scalar){
-    return data + (scalar*vec);/*vec3{
-        .x = data.x + (vec.x * scalar),
-        .y = data.y + (vec.y * scalar),
-        .z = data.y + (vec.z * scalar)
-    };*/
-}
-
-vec4 AddScaledVector4(vec4 data, vec4 vec, float scalar){
-    return data + (scalar*vec);
-    /*return vec4{
-        .x = data.x + (vec.x * scalar),
-        .y = data.y + (vec.y * scalar),
-        .z = data.y + (vec.z * scalar),
-        data.w
-    };*/
 }
 
 //-------------------------
@@ -263,18 +186,15 @@ vec4 AddScaledVector4(vec4 data, vec4 vec, float scalar){
 //-------------------------
 
 mat2 Mat2(vec2 cx, vec2 cy){
-    mat2 a = {.x = cx, .y = cy};
-    return a;
+    return mat2{.x = cx, .y = cy};
 }
 
 mat3 Mat3(vec3 cx, vec3 cy, vec3 cz){
-    mat3 a = {.x = cx, .y = cy, .z = cz};
-    return a;
+    return mat3{.x = cx, .y = cy, .z = cz};
 }
 
 mat4 Mat4(vec4 cx, vec4 cy, vec4 cz, vec4 cw){
-    mat4 a = {.x = cx, .y = cy, .z = cz, .w = cw};
-    return a;
+    return mat4{.x = cx, .y = cy, .z = cz, .w = cw};
 }
 
 
@@ -290,8 +210,6 @@ Quat Quaternion(vec4 v){
             };
     return q;
 }
-
-float Radians(float v){ return v * (M_PI / 180.0f); }
 
 Quat Quat_from_axis_angle(ScePspFVector3 axis, float angle_rad) {
     Quat q;

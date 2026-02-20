@@ -3,7 +3,9 @@
 #ifndef PSP_ENGINE_CAMERA
 #define PSP_ENGINE_CAMERA
 
-#include"../../core/Linear_Algebra/trans_proj.hpp"
+#include "../../core/core.hpp"
+#include "../../core/Linear_Algebra/trans_proj.hpp"
+
 
 enum Camera_Movement{
     FORWARD,
@@ -17,6 +19,7 @@ enum Camera_Movement{
 //=============
 //    Dados
 //=============
+
 struct CameraData{
     vec3 Position;
     vec3 Front;
