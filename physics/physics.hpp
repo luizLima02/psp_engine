@@ -112,11 +112,6 @@ bool Collides(const AABB& s1, const SPHERE& s2);
 //=============================
 //  STRUCTS PHYSICS SIMULATION
 //=============================
-//----------------------
-//      Globals
-//----------------------
-extern vec3 gravidade;
-
 //-----------------
 //     PARTICLE
 //-----------------
@@ -175,7 +170,8 @@ void Integrate(Particle* particle, float dt);
 enum ForceType{
     FG_GRAVITY,
     FG_DRAG,
-    FG_SPRING
+    FG_SPRING,
+    FG_BUOYANCY
 };
 
 typedef struct{
@@ -190,6 +186,12 @@ typedef struct{
             float springConstant; //4 Bytes
             float restLength; //4 Bytes
         }spring;
+        struct{
+            float maxDepth; //4 Bytes
+            float volume; //4 Byte
+            float waterHeight; //4 Byte
+            float liquidDensity; //4 Byte
+        }buoyancy; //16 Bytes
     } data; //16 Bytes
     ForceType type; //4 Bytes
     int padding_bot[3]; //12 Bytes
@@ -223,28 +225,53 @@ static inline void applyDrag(Particle* p, float k1, float k2) {
     AddForce(p, vec4{force.x, force.y, force.z, 0});
 }
 
-static inline void applySpring(Particle* p, vec4* other, float sc, float rl){
+static inline void applySpring(Particle* p, vec4* other, float sc, float rl, bool Bungee = false){
     vec4 force;
     force.x = p->position.x - other->x;
     force.y = p->position.y - other->y;
     force.z = p->position.z - other->z;
     force.w = 0;
+
     // 2. Calcular a magnitude da distância
     float magnitude = sqrtf(force.x*force.x + force.y*force.y + force.z*force.z);
-
-    // Proteção contra divisão por zero caso as partículas estejam no mesmo lugar
-    if(magnitude <= 0.0001f) return;
+    if(magnitude <= rl) return;
+    // Proteção contra divisão por zero caso as partículas estejam no mesmo lugar 
+    if(magnitude <= 0.0001f && magnitude >= -0.0001f) return;
 
     // 3. Calcular o coeficiente da força: sprintConstant * (magnitude - restLength)
-    float totalForce = (magnitude - rl) * sc;
+    float totalForce = 0;
+    if(Bungee)
+        totalForce = sc * (rl - magnitude);
+    else
+        totalForce = fabs(magnitude - rl) * sc;
 
     // 4. Normalizar o vetor força e aplicar a magnitude total
     float invMag = 1.0f / magnitude;
-    force.x *= invMag * -totalForce;
-    force.y *= invMag * -totalForce;
-    force.z *= invMag * -totalForce;
-
+    force.x *= -(invMag * totalForce);
+    force.y *= -(invMag * totalForce);
+    force.z *= -(invMag * totalForce);
+    
     // 5. Adicionar ao acumulador da partícula
+    AddForce(p, force);
+}
+
+static inline void applyBuoyancy(Particle* p, float maxDepth, float volume, float waterHeight, float liquidDensity){
+    //calculate the submersion depth.
+    float depth = p->position.y;
+
+    //check if we're out of water.
+    if(depth >= waterHeight + maxDepth) return;
+    vec4 force = vec4{0,0,0,0};
+
+    //check if we're at maximum depth.
+    if(depth <= waterHeight - maxDepth)
+    {
+        force.y = liquidDensity * volume;
+        AddForce(p, force);
+        return;
+    }
+    // Otherwise we are partly submerged.
+    force.y = liquidDensity * volume * (depth - maxDepth - waterHeight) / 2 * maxDepth;
     AddForce(p, force);
 }
 
@@ -255,5 +282,8 @@ ForceGenerator Create_GravityGenerator(vec4 g);
 ForceGenerator Create_DragGenerator(float k1, float k2);
 
 ForceGenerator Create_SpringGenerator(vec4* other, float sc, float rl);
+
+ForceGenerator Create_BuoyancyGenerator(float maxDepth, float volume, 
+                                        float waterHeight, float liquidDensity);
 
 #endif

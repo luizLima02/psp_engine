@@ -77,12 +77,6 @@ bool Collides(const SPHERE& s1, const AABB& s2){
 //=============================
 //          Physics
 //=============================
-
-//----------------------
-//      Globals
-//----------------------
-vec3 gravidade = {0, -9.81, 0};
-
 //-----------------
 //     PARTICLE
 //-----------------
@@ -122,11 +116,18 @@ void updateForce(Particle* p, const ForceGenerator* fg, float duration){
     switch(fg->type)
     {
         case FG_GRAVITY:
-        applyGravity(p, fg->data.gravity.values);
+        applyGravity(
+            p, 
+            fg->data.gravity.values
+        );
         break;
 
         case FG_DRAG:
-        applyDrag(p, fg->data.drag.k1, fg->data.drag.k2);
+        applyDrag(
+            p, 
+            fg->data.drag.k1, 
+            fg->data.drag.k2
+        );
         break;
 
         case FG_SPRING:
@@ -135,6 +136,16 @@ void updateForce(Particle* p, const ForceGenerator* fg, float duration){
             fg->data.spring.otherPos,
             fg->data.spring.springConstant,
             fg->data.spring.restLength
+        );
+        break;
+
+        case FG_BUOYANCY:
+        applyBuoyancy(
+            p,
+            fg->data.buoyancy.maxDepth,
+            fg->data.buoyancy.volume,
+            fg->data.buoyancy.waterHeight,
+            fg->data.buoyancy.liquidDensity
         );
         break;
 
@@ -164,6 +175,16 @@ ForceGenerator Create_SpringGenerator(vec4* other, float sc, float rl){
     fg.data.spring.springConstant = sc;
     fg.data.spring.restLength = rl;
     fg.type = FG_SPRING;
+    return fg;
+}
+
+ForceGenerator Create_BuoyancyGenerator(float maxDepth, float volume, float waterHeight, float liquidDensity){
+    ForceGenerator fg;
+    fg.data.buoyancy.maxDepth = maxDepth;
+    fg.data.buoyancy.volume = volume;
+    fg.data.buoyancy.waterHeight = waterHeight;
+    fg.data.buoyancy.liquidDensity = liquidDensity;
+    fg.type = FG_BUOYANCY;
     return fg;
 }
 
