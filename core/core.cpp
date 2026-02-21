@@ -181,6 +181,12 @@ float DOT(vec3 t, vec3 outro){
     return gumDotProduct(&t, &outro);
 }
 
+/*
+* Retorna o produto escalar dos vetores Passados
+*/
+float DOT(vec4 t, vec4 outro){
+    return (t.x*outro.x) + (t.y*outro.y) + (t.z*outro.z);
+}
 //-------------------------
 //   construtores matriz
 //-------------------------

@@ -239,6 +239,10 @@ static inline void operator/=(vec4& u, const float &s){
 * Retorna o Cross Product dos vetores Passados
 */
 vec3 Cross(vec3 u, vec3 t);
+/*
+* Retorna o produto escalar dos vetores Passados
+*/
+float DOT(vec4 t, vec4 outro);
 
 /*
 * Retorna o produto escalar dos vetores Passados

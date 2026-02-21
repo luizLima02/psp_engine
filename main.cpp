@@ -61,11 +61,11 @@ int main(){
 		registy[i].p  = &particulas[i];
 		registy[i].fg = &forceApp;
 	}*/
-	particulas[0] = Create_Particle(vec4{0, 10, 0, -5}, 0, 0.99f, vec4{0,0,0,0}, vec4{0,0,0,0});
+	particulas[0] = Create_Particle(vec4{0, 10, 0, 0}, 0, 0.99f, vec4{0,0,0,0}, vec4{0,0,0,0});
 	//particulas[2] = Create_Particle(vec4{2, 10, 0, -5}, 0, 0.99f, vec4{0,0,0,0}, vec4{0,0,0,0});
-	particulas[1] = Create_Particle(vec4{0, 0, 0, -5}, 1, 0.99f, vec4{0,0,0,0}, vec4{0,0,0,0});
+	particulas[1] = Create_Particle(vec4{0, 0, 0, 0}, 1, 0.90f, vec4{0,0,0,0}, vec4{0,0,0,0});
 	//force Generators
-	ForceGenerator springGen = Create_SpringGenerator(&particulas[0].position, 15.0f, 10.0f);
+	ForceGenerator springGen = Create_BuoyancyGenerator(2, 1, 0);//Create_SpringGenerator(&particulas[0].position, 15.0f, 10.0f);
 	//ForceGenerator springGen2 = Create_SpringGenerator(&particulas[2].position, 15.0f, 10.0f);
 	ForceGenerator gravityGen = Create_GravityGenerator(vec4{0, -9.81, 0, 0});
 
@@ -155,12 +155,12 @@ int main(){
 		//}
 		renderParticles(particulas, 2, GU_RGBA(255, 0, 0, 255));
 		//}
-		if(puxou){
+		/*if(puxou){
 			puxou = false;
 		}
 		if(shouldRender){
 			shouldRender = false;
-		}
+		}*/
 		//reset_translate(0, 0, 0);
 		//draw_square2D(GU_RGBA(0, 0, 0, 255));
 		//Cam.Position.x = Get_Position(obj).x;

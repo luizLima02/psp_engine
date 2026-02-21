@@ -188,3 +188,30 @@ ForceGenerator Create_BuoyancyGenerator(float maxDepth, float volume, float wate
     return fg;
 }
 
+
+//-----------------------------
+
+ParticleContactResolver Create_ParticleContactResolver(unsigned iterations){
+    return ParticleContactResolver{.iterations = iterations, .iterationsUsed = 0};
+}
+
+void ParticleContactResolver::resolveContacts(ParticleContact *contactArray, unsigned numContacts,float dt){
+    iterationsUsed = 0;
+    while(iterationsUsed < iterations)
+    {
+        float max = 0;
+        unsigned maxIndex = numContacts;
+        for(unsigned i = 0; i < numContacts; i++)
+        {
+            float sepVel = calculateSeparatingVelocity(&contactArray[i]);
+            if(sepVel < max){
+                max = sepVel;
+                maxIndex = i;
+            }
+        }
+        // Resolve this contact.
+        resolve(&contactArray[maxIndex], dt);
+        iterationsUsed++;
+    }
+}
+

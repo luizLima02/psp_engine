@@ -187,9 +187,24 @@ typedef struct{
             float restLength; //4 Bytes
         }spring;
         struct{
+            /**
+            * The maximum submersion depth of the object before
+            * it generates its maximum buoyancy force.
+            */
             float maxDepth; //4 Bytes
+            /**
+            * The volume of the object.
+            */
             float volume; //4 Byte
+            /**
+            * The height of the water plane above y=0. The plane will be
+            * parallel to the XZ plane.
+            */
             float waterHeight; //4 Byte
+            /**
+            * The density of the liquid. Pure water has a density of
+            * 1000 kg per cubic meter.
+            */
             float liquidDensity; //4 Byte
         }buoyancy; //16 Bytes
     } data; //16 Bytes
@@ -198,8 +213,8 @@ typedef struct{
 } __attribute__((aligned(16))) ForceGenerator; //32 Bytes
 
 typedef struct {
-    Particle* p;
-    ForceGenerator* fg;
+    Particle* p; //4 bytes
+    ForceGenerator* fg; //4 bytes
 } ForceRegistration;
 
 //--------------
@@ -271,7 +286,7 @@ static inline void applyBuoyancy(Particle* p, float maxDepth, float volume, floa
         return;
     }
     // Otherwise we are partly submerged.
-    force.y = liquidDensity * volume * (depth - maxDepth - waterHeight) / 2 * maxDepth;
+    force.y = liquidDensity * volume * ((depth - maxDepth - waterHeight) / (2 * maxDepth));
     AddForce(p, force);
 }
 
@@ -284,6 +299,240 @@ ForceGenerator Create_DragGenerator(float k1, float k2);
 ForceGenerator Create_SpringGenerator(vec4* other, float sc, float rl);
 
 ForceGenerator Create_BuoyancyGenerator(float maxDepth, float volume, 
-                                        float waterHeight, float liquidDensity);
+                                        float waterHeight, float liquidDensity = 1000.0f);
+
+//-----------------------------
+//      Physics Colision
+//-----------------------------
+typedef struct{
+    Particle* particle[2]; //8 Bytes
+    float restuition; //4 Bytes
+    float penetration; //4 bytes
+    //16
+    vec4 contactNormal; //16
+}ParticleContact;
+
+
+static inline float calculateSeparatingVelocity(ParticleContact* pc){
+    vec4 relativeVelocity = pc->particle[0]->velocity;
+    if(pc->particle[1]) relativeVelocity -= pc->particle[1]->velocity;
+    return DOT(relativeVelocity, pc->contactNormal);
+}
+
+static void resolveVelocity(ParticleContact* pc, float dt){
+    // Find the velocity in the direction of the contact.
+    float separatingVelocity = calculateSeparatingVelocity(pc);
+
+    // Check whether it needs to be resolved.
+    if(separatingVelocity > 0)
+    {
+    // The contact is either separating or stationary- there’s
+    // no impulse required.
+        return;
+    }
+    float newSepVelocity = -separatingVelocity * pc->restuition;
+
+    // Check the velocity build-up due to acceleration only.
+    vec4 accCausedVelocity = pc->particle[0]->acceleration;
+    if(pc->particle[1]) accCausedVelocity -= pc->particle[1]->acceleration;
+    vec4 contactNormalD = vec4{pc->contactNormal.x*dt, 
+                               pc->contactNormal.y*dt,
+                               pc->contactNormal.z*dt,
+                               0
+                            };
+    float accCausedSepVelocity = DOT(accCausedVelocity, contactNormalD);
+    // If we’ve got a closing velocity due to acceleration build-up,
+    // remove it from the new separating velocity.
+    if(accCausedSepVelocity < 0)
+    {
+        newSepVelocity += pc->restuition * accCausedSepVelocity;
+        // Make sure we haven’t removed more than was
+        // there to remove.
+        if (newSepVelocity < 0) newSepVelocity = 0;
+    }
+
+    float deltaVelocity = newSepVelocity - separatingVelocity;
+    // We apply the change in velocity to each object in proportion to
+    // its inverse mass (i.e., those with lower inverse mass [higher
+    // actual mass] get less change in velocity).
+    float totalInverseMass = pc->particle[0]->inverseMass;
+    if (pc->particle[1]) totalInverseMass += pc->particle[1]->inverseMass;
+
+    // If all particles have infinite mass, then impulses have no effect.
+    if (totalInverseMass <= 0) return;
+
+    // Calculate the impulse to apply.
+    float impulse = deltaVelocity / totalInverseMass;
+
+    // Find the amount of impulse per unit of inverse mass.
+    vec4 impulsePerIMass;
+    impulsePerIMass.x = pc->contactNormal.x * impulse;
+    impulsePerIMass.y = pc->contactNormal.y * impulse;
+    impulsePerIMass.z = pc->contactNormal.z * impulse;
+    impulsePerIMass.w = 0;
+    // Apply impulses: they are applied in the direction of the contact,
+    // and are proportional to the inverse mass.
+    pc->particle[0]->velocity.x += impulsePerIMass.x * pc->particle[0]->inverseMass;
+    pc->particle[0]->velocity.y += impulsePerIMass.y * pc->particle[0]->inverseMass;
+    pc->particle[0]->velocity.z += impulsePerIMass.z * pc->particle[0]->inverseMass;
+    if(pc->particle[1])
+    {
+        pc->particle[1]->velocity.x += impulsePerIMass.x * -pc->particle[1]->inverseMass;
+        pc->particle[1]->velocity.y += impulsePerIMass.y * -pc->particle[1]->inverseMass;
+        pc->particle[1]->velocity.z += impulsePerIMass.z * -pc->particle[1]->inverseMass;
+    }
+}
+
+static void resolveInterpenetration(ParticleContact* pc, float dt){
+    // If we don’t have any penetration, skip this step.
+    if(pc->penetration <= 0) return;
+
+    // The movement of each object is based on its inverse mass, so
+    // total that.
+    float totalInverseMass = pc->particle[0]->inverseMass;
+    if(pc->particle[1]) totalInverseMass += pc->particle[1]->inverseMass;
+
+    // If all particles have infinite mass, then we do nothing.
+    if(totalInverseMass <= 0) return;
+
+    // Find the amount of penetration resolution per unit of inverse mass.
+    vec4 movePerIMass;
+    movePerIMass.x = pc->contactNormal.x * (-pc->penetration / totalInverseMass);
+    movePerIMass.y = pc->contactNormal.y * (-pc->penetration / totalInverseMass);
+    movePerIMass.z = pc->contactNormal.z * (-pc->penetration / totalInverseMass);
+    movePerIMass.w = 0;
+    // Apply the penetration resolution.
+    pc->particle[0]->position.x += movePerIMass.x * pc->particle[0]->inverseMass;
+    pc->particle[0]->position.y += movePerIMass.y * pc->particle[0]->inverseMass;
+    pc->particle[0]->position.z += movePerIMass.z * pc->particle[0]->inverseMass;
+    if(pc->particle[1])
+    {
+        pc->particle[1]->position.x += movePerIMass.x * pc->particle[1]->inverseMass;
+        pc->particle[1]->position.y += movePerIMass.y * pc->particle[1]->inverseMass;
+        pc->particle[1]->position.z += movePerIMass.z * pc->particle[1]->inverseMass;
+    }
+}
+
+static inline void resolve(ParticleContact* pc, float dt){
+    resolveVelocity(pc, dt);
+    resolveInterpenetration(pc, dt);
+}
+
+
+typedef struct{
+    unsigned iterations; //4 Bytes
+    unsigned iterationsUsed; //4 Bytes
+    void resolveContacts(ParticleContact *contactArray, unsigned numContacts,float dt);
+}ParticleContactResolver;
+
+ParticleContactResolver Create_ParticleContactResolver(unsigned iterations);
+
+
+//-----------------
+//  ParticleLink
+//-----------------
+enum LinkType{
+    ParticleCable,
+    ParticleRod
+};
+
+typedef struct{
+    union{
+        struct{float maxLenght, restitution;}cable;//8 bytes
+        struct{float lenght;}rod; //4 bytes
+    }data; //8 Bytes
+    Particle* particle[2]; //8 Bytes
+    //16 Bytes
+    LinkType type; // 4 Bytes
+    char padding[12]; // 12 Bytes
+}ParticleLink;
+
+static inline float currentLenght(ParticleLink pl){
+    vec3 relativePos;
+    relativePos.x = pl.particle[0]->position.x - pl.particle[1]->position.x;
+    relativePos.y = pl.particle[0]->position.y - pl.particle[1]->position.y;
+    relativePos.z = pl.particle[0]->position.z - pl.particle[1]->position.z;
+    return Norm(relativePos);
+}
+
+static unsigned fillCable(ParticleLink pl, ParticleContact *contact, unsigned limit){
+    float lenght = currentLenght(pl);
+    // Check whether we’re overextended.
+    if(lenght < pl.data.cable.maxLenght){
+        return 0;
+    }
+
+    // Otherwise return the contact.
+    contact->particle[0] = pl.particle[0];
+    contact->particle[1] = pl.particle[1];
+    // Calculate the normal.
+    vec3 normal = vec3{pl.particle[1]->position.x - pl.particle[0]->position.x,
+                       pl.particle[1]->position.y - pl.particle[0]->position.y,
+                       pl.particle[1]->position.z - pl.particle[0]->position.z,
+    };
+    normal = Normalize(normal);
+    contact->contactNormal.x = normal.x;
+    contact->contactNormal.y = normal.y;
+    contact->contactNormal.z = normal.z; contact->contactNormal.w = 0;
+
+    contact->penetration = lenght - pl.data.cable.maxLenght;
+    contact->restuition = pl.data.cable.restitution;
+
+    return 1;
+}
+
+static unsigned fillRod(ParticleLink pl, ParticleContact *contact, unsigned limit){
+    float currentLen = currentLenght(pl);
+    // Check whether we’re overextended.
+    if (currentLen == pl.data.rod.lenght)
+    {
+        return 0;
+    }
+    // Otherwise return the contact.
+    contact->particle[0] = pl.particle[0];
+    contact->particle[1] = pl.particle[1];
+    // Calculate the normal.
+    vec3 normal = vec3{pl.particle[1]->position.x - pl.particle[0]->position.x,
+                       pl.particle[1]->position.y - pl.particle[0]->position.y,
+                       pl.particle[1]->position.z - pl.particle[0]->position.z,
+    };
+    normal = Normalize(normal);
+    // The contact normal depends on whether we’re extending
+    // or compressing.
+    if(currentLen > pl.data.rod.lenght){
+        contact->contactNormal.x = normal.x;
+        contact->contactNormal.y = normal.y;
+        contact->contactNormal.z = normal.z; contact->contactNormal.w = 0;
+        contact->penetration = currentLen - pl.data.rod.lenght;
+    }else{
+        contact->contactNormal.x = -1*normal.x;
+        contact->contactNormal.y = -1*normal.y;
+        contact->contactNormal.z = -1*normal.z; contact->contactNormal.w = 0;
+        contact->penetration = pl.data.rod.lenght - currentLen;
+    }
+    contact->restuition = 0;
+    return 1;
+}
+
+/**
+* Fills the given contact structure with the contact needed
+* to keep the cable from overextending.
+*/
+static unsigned fillContact(ParticleLink pl, ParticleContact *contact, unsigned limit)
+{
+    switch (pl.type)
+    {
+    case ParticleCable:
+        return fillCable(pl, contact, limit);
+        break;
+    case ParticleRod:
+        return fillRod(pl, contact, limit);
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
 
 #endif
